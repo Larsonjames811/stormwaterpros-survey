@@ -71,6 +71,8 @@
   .tg-chip:hover{background:var(--soft)}
   .tg-chip.on{border-color:var(--accent);background:#eff5ff}
   .tg-chip input{width:17px;height:17px;accent-color:var(--accent);flex:0 0 auto}
+  .tg-otherbox{margin:2px 0 4px;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;width:100%}
+  .tg-otherbox:focus{border-color:var(--accent);outline:none}
 </style>
 </head>
 <body>
@@ -249,7 +251,7 @@ function buildTimeGrid(mount, s){
   if(!tasks.length){ mount.innerHTML='<p class="help">Go back a step and list a task first.</p>'; return; }
   const wrap=document.createElement("div");
   tasks.forEach((task,idx)=>{
-    if(!store[idx]) store[idx]={task, amount:"", unit:"hours", freq:"week", how:[], headcount:"Just me"};
+    if(!store[idx]) store[idx]={task, amount:"", unit:"hours", freq:"week", how:[], howOther:"", otherOn:false, headcount:"Just me"};
     else store[idx].task=task;
     if(!Array.isArray(store[idx].how)) store[idx].how=[];
     if(!store[idx].headcount) store[idx].headcount="Just me";
@@ -276,6 +278,15 @@ function buildTimeGrid(mount, s){
       chip.append(cb, document.createTextNode(" "+opt));
       checks.appendChild(chip);
     });
+    // Other (free text)
+    const oChip=document.createElement("label"); oChip.className="tg-chip"+(store[idx].otherOn?" on":"");
+    const oCb=document.createElement("input"); oCb.type="checkbox"; oCb.checked=!!store[idx].otherOn;
+    oChip.append(oCb, document.createTextNode(" Other"));
+    const oBox=document.createElement("input"); oBox.type="text"; oBox.className="tg-otherbox"; oBox.placeholder="Tell us how…";
+    oBox.value=store[idx].howOther||""; oBox.style.display=store[idx].otherOn?"block":"none";
+    oBox.oninput=()=>{ store[idx].howOther=oBox.value; };
+    oCb.onchange=()=>{ store[idx].otherOn=oCb.checked; oChip.classList.toggle("on",oCb.checked); oBox.style.display=oCb.checked?"block":"none"; if(oCb.checked){ setTimeout(()=>oBox.focus(),30); } else { store[idx].howOther=""; oBox.value=""; } };
+    checks.appendChild(oChip); checks.appendChild(oBox);
     card.appendChild(checks);
     // headcount multiplier
     const hcLab=document.createElement("div"); hcLab.className="tg-sub"; hcLab.textContent="How many others do this same task?";
